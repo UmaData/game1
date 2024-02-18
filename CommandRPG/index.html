@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time Command RPG</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    #game-container {
+        margin-top: 50px;
+    }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Real-Time Command RPG</h1>
+    <div id="status"></div>
+    <input type="text" id="word-input" placeholder="音声でコマンドを入力">
+    <button id="attack-btn">攻撃</button>
+</div>
+
+<script>
+    // プレイヤーのステータス
+    let player = {
+        hp: 100,
+        attack: 10
+    };
+
+    // エネミーのステータス
+    let enemy = {
+        hp: 50,
+        attack: 8
+    };
+
+    // ステータスを表示する関数
+    function displayStatus() {
+        document.getElementById('status').innerHTML = `
+            <p>Player HP: ${player.hp}</p>
+            <p>Enemy HP: ${enemy.hp}</p>
+        `;
+    }
+
+    // プレイヤーが攻撃する関数
+    function playerAttack() {
+        const inputWord = document.getElementById('word-input').value.trim();
+        const targetWord = '攻撃'; // 的に攻撃するための指定単語
+
+        // 入力された単語が指定された単語と一致した場合に攻撃
+        if (inputWord === targetWord) {
+            enemy.hp -= player.attack;
+            checkBattleResult();
+        } else {
+            // alert('指定された単語を入力してください！');
+        }
+        // テキストボックスをクリア
+        document.getElementById('word-input').value = '';
+    }
+
+    // エネミーが攻撃する関数
+    function enemyAttack() {
+        player.hp -= enemy.attack;
+        checkBattleResult();
+    }
+
+    // バトルの結果を確認する関数
+    function checkBattleResult() {
+        if (player.hp <= 0) {
+            endGame('You were defeated! Game over!');
+        } else if (enemy.hp <= 0) {
+            endGame('Enemy defeated! You win!');
+        }
+        displayStatus();
+    }
+
+    // ゲーム終了時の処理をする関数
+    function endGame(message) {
+        alert(message);
+        resetGame();
+    }
+
+    // ゲームをリセットする関数
+    function resetGame() {
+        player.hp = 100;
+        enemy.hp = 50;
+        displayStatus();
+    }
+
+    // 攻撃ボタンにイベントリスナーを追加
+    document.getElementById('attack-btn').addEventListener('click', playerAttack);
+
+    // 1秒ごとにエネミーが攻撃する
+    setInterval(enemyAttack, 1000);
+
+    // 最初にステータスを表示
+    displayStatus();
+
+    // 音声認識を開始する関数
+    function startSpeechRecognition() {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'ja-JP';
+        recognition.continuous = true; // 音声認識を途切れさせない
+        recognition.interimResults = true; // 途中結果を処理する
+        recognition.onresult = function(event) {
+            const result = event.results[event.results.length - 1][0].transcript;
+            document.getElementById('word-input').value = result;
+            document.getElementById('attack-btn').click();
+            var results = event.results;
+                for (var i = event.resultIndex; i < results.length; i++) {
+                    if (results[i].isFinal)
+                    {
+                      startSpeechRecognition();
+                    }
+                    else
+                    {
+                        flag_speech = 1;
+                    }
+                }
+        };
+        recognition.start();
+    }
+
+    // ページ読み込み時に音声認識を開始
+    window.onload = startSpeechRecognition;
+    document.getElementById('word-input').addEventListener('click', startSpeechRecognition);
+
+
+</script>
+
+</body>
+</html>
